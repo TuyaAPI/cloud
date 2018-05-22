@@ -1,0 +1,60 @@
+{
+  "name": "@tuya/cloud",
+  "version": "0.1.0",
+  "description": "A NodeJS wrapper for Tuya's cloud API",
+  "main": "main.js",
+  "dependencies": {
+    "got": "^8.3.1",
+    "is": "^3.2.1",
+    "md5": "^2.2.1",
+    "promise-poller": "^1.6.0",
+    "randomatic": "^3.0.0",
+    "sort-keys-recursive": "^2.0.1"
+  },
+  "engines": {
+    "node": ">=8.0.0"
+  },
+  "devDependencies": {
+    "ava": "^0.25.0",
+    "xo": "^0.21.1"
+  },
+  "xo": {
+    "space": true,
+    "rules": {
+      "max-len": [
+        "error",
+        {
+          "code": 90
+        }
+      ],
+      "indent": [
+        "error",
+        2,
+        {
+          "ObjectExpression": "first",
+          "ArrayExpression": "first"
+        }
+      ]
+    }
+  },
+  "scripts": {
+    "test": "xo && ava"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/TuyaAPI/cloud.git"
+  },
+  "keywords": [
+    "iot",
+    "cloud",
+    "tuya",
+    "wrapper",
+    "api"
+  ],
+  "author": "“Max <codetheweb@icloud.com> (https://maxisom.me)",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/TuyaAPI/cloud/issues"
+  },
+  "homepage": "https://github.com/TuyaAPI/cloud#readme"
+}

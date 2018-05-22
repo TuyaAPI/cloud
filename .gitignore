@@ -1,3 +1,9 @@
+# API keys
+keys.json
+
+# Development test file
+dev.js
+
 # Logs
 logs
 *.log
