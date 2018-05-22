@@ -229,7 +229,8 @@ TuyaCloud.prototype.waitForToken = function (options) {
           resolve(tokenResult);
         }
 
-        // wait for 200 ms
+        // Wait for 200 ms
+        /* eslint-disable-next-line no-await-in-loop */
         await delay(200);
       } catch (err) {
         reject(err);
