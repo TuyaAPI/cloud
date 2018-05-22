@@ -9,7 +9,17 @@ A NodeJS wrapper for Tuya's [cloud API](https://docs.tuya.com/en/cloudapi/cloudA
 `npm i @tuyapi/cloud`
 
 ## Usage
+```javascript
+const Cloud = require('@tuyapi/cloud');
 
+let api = new Cloud({key: 'your-api-key', secret: 'your-api-secret'});
+
+api.register({email: 'example@example.com', password: 'example-password'}).then(async sid => {
+  let token = await api.request({action: 'tuya.m.device.token.create', data: {'timeZone': '-05:00'}});
+
+  console.log(token) // => { secret: '0000', token: '01010101' }
+});
+```
 
 ## Development
 1. Run `npm i -D`.
