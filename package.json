@@ -16,6 +16,8 @@
   },
   "devDependencies": {
     "ava": "^0.25.0",
+    "coveralls": "^3.0.1",
+    "nyc": "^11.8.0",
     "xo": "^0.21.1"
   },
   "xo": {
@@ -38,7 +40,8 @@
     }
   },
   "scripts": {
-    "test": "xo && ava"
+    "test": "xo && ava",
+    "cover": "nyc npm test && nyc report --reporter=text-lcov | coveralls"
   },
   "repository": {
     "type": "git",
