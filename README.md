@@ -1,7 +1,5 @@
-tuyapi/cloud
+tuyapi/cloud [![Build Status](https://travis-ci.org/TuyaAPI/cloud.svg?branch=master)](https://travis-ci.org/TuyaAPI/cloud) [![Coverage Status](https://coveralls.io/repos/github/TuyaAPI/cloud/badge.svg?branch=master)](https://coveralls.io/github/TuyaAPI/cloud?branch=master) [![forthebadge](https://forthebadge.com/images/badges/made-with-javascript.svg)](https://forthebadge.com)
 ==============
-
-[![forthebadge](https://forthebadge.com/images/badges/made-with-javascript.svg)](https://forthebadge.com)
 
 A NodeJS wrapper for Tuya's [cloud API](https://docs.tuya.com/en/cloudapi/cloudAPI/index.html).
 
