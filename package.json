@@ -42,7 +42,7 @@
   "scripts": {
     "test": "xo && ava",
     "cover": "nyc npm test && nyc report --reporter=text-lcov | coveralls",
-    "document": "documentation build main.js -f md | (echo 'Documentation \n=========' && cat) > docs/Cloud.md"
+    "document": "documentation build main.js -f html -o docs"
   },
   "repository": {
     "type": "git",
