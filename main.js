@@ -3,6 +3,7 @@ const got = require('got');
 const randomize = require('randomatic');
 const sortObject = require('sort-keys-recursive');
 const md5 = require('md5');
+const delay = require('delay');
 
 /**
 * A TuyaCloud object
@@ -227,6 +228,9 @@ TuyaCloud.prototype.waitForToken = function (options) {
         if (tokenResult.length >= options.devices) {
           resolve(tokenResult);
         }
+
+        // wait for 200 ms
+        await delay(200);
       } catch (err) {
         reject(err);
       }

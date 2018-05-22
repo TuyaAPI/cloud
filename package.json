@@ -4,6 +4,7 @@
   "description": "A NodeJS wrapper for Tuya's cloud API",
   "main": "main.js",
   "dependencies": {
+    "delay": "^2.0.0",
     "got": "^8.3.1",
     "is": "^3.2.1",
     "md5": "^2.2.1",
