@@ -19,6 +19,8 @@ api.register({email: 'example@example.com', password: 'example-password'}).then(
 });
 ```
 
+[Documentation](https://tuyaapi.github.io/cloud/)
+
 ## Development
 1. After cloning, run `npm i`.
 2. Add a file called `keys.json` with the contents
