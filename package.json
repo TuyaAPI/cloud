@@ -1,5 +1,5 @@
 {
-  "name": "@tuya/cloud",
+  "name": "@tuyapi/cloud",
   "version": "0.1.0",
   "description": "A NodeJS wrapper for Tuya's cloud API",
   "main": "main.js",
@@ -7,7 +7,6 @@
     "got": "^8.3.1",
     "is": "^3.2.1",
     "md5": "^2.2.1",
-    "promise-poller": "^1.6.0",
     "randomatic": "^3.0.0",
     "sort-keys-recursive": "^2.0.1"
   },

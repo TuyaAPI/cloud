@@ -3,7 +3,6 @@ const got = require('got');
 const randomize = require('randomatic');
 const sortObject = require('sort-keys-recursive');
 const md5 = require('md5');
-const promisePoller = require('promise-poller').default;
 
 /**
 * A TuyaCloud object
@@ -218,23 +217,21 @@ TuyaCloud.prototype.waitForToken = function (options) {
     options.devices = 1;
   }
 
-  return promisePoller({
-    taskFn: (async () => {
+  return new Promise(async (resolve, reject) => {
+    for (let i = 0; i < 200; i++) {
       try {
+        /* eslint-disable-next-line no-await-in-loop */
         const tokenResult = await this.request({action: 'tuya.m.device.list.token',
                                                 data: {token: options.token}});
 
-        if (tokenResult.length < options.devices) {
-          return new Error('Error: Device(s) not yet added');
+        if (tokenResult.length >= options.devices) {
+          resolve(tokenResult);
         }
-
-        return tokenResult;
       } catch (err) {
-        return err;
+        reject(err);
       }
-    }),
-    interval: 500,
-    retries: 150
+    }
+    reject(new Error('Timed out wating for device(s) to connect to cloud'));
   });
 };
 
