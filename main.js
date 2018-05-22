@@ -5,10 +5,17 @@ const sortObject = require('sort-keys-recursive');
 const md5 = require('md5');
 const promisePoller = require('promise-poller').default;
 
-// A options.key
-// options.secret
-// options.deviceID | random
-// options.endpoint / options.region (defaults to US)
+/**
+* A TuyaCloud object
+* @class
+* @param {Object} options construction options
+* @param {String} options.key API key
+* @param {String} options.secret API secret
+* @param {String} [options.region='AZ'] region (AZ=Americas, AY=Asia, EU=Europe)
+* @param {String} [options.deviceID] ID of device calling API (defaults to a random value)
+* @example
+* const api = new Cloud({key: 'your-api-key', secret: 'your-api-secret'})
+*/
 function TuyaCloud(options) {
   // Set to empty object if undefined
   options = is.undefined(options) ? {} : options;
@@ -42,9 +49,22 @@ function TuyaCloud(options) {
   }
 }
 
-// A options.requiresSID | true
-// options.action
-// options.data | {}
+/**
+* Sends an API request
+* @param {Object} options
+* request options
+* @param {String} options.action
+* API action to invoke (for example, 'tuya.cloud.device.token.create')
+* @param {Object} [options.data={}]
+* data to send in the request body
+* @param {Boolean} [options.requiresSID=true]
+* set to false if the request doesn't require a session ID
+* @example
+* // generate a new token
+* api.request({action: 'tuya.m.device.token.create',
+*              data: {'timeZone': '-05:00'}}).then(token => console.log(token))
+* @returns {Promise<Object>} A Promise that contains the response body parsed as JSON
+*/
 TuyaCloud.prototype.request = function (options) {
   // Set to empty object if undefined
   options = is.undefined(options) ? {} : options;

@@ -31,5 +31,6 @@ api.register({email: 'example@example.com', password: 'example-password'}).then(
 3. Create a file called `dev.js` as a playground. Since `dev.js` is in `.gitignore`, it won't be committed.
 4. To run tests, run `npm test`.
 5. To output coverage, run `npm run cover` (it will exit with an error).
+6. To build documentation, run `npm run document`.
 
 [![forthebadge](https://forthebadge.com/images/badges/made-with-javascript.svg)](https://forthebadge.com)
