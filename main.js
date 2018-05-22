@@ -137,10 +137,20 @@ TuyaCloud.prototype.request = function (options) {
   });
 };
 
-// A options.region
-// options.email
-// options.password
-// If email is already registered, try logging in instead
+/**
+* Helper to register a new user. If user already exists, it instead attempts to log in.
+* @param {Object} options
+* register options
+* @param {String} options.email
+* email to register
+* @param {String} options.password
+* password for new user
+* @example
+* api.register({email: 'example@example.com',
+                password: 'example-password'})
+                .then(sid => console.log('Session ID: ', sid))
+* @returns {Promise<String>} A Promise that contains the session ID
+*/
 TuyaCloud.prototype.register = async function (options) {
   try {
     const apiResult = await this.request({action: 'tuya.m.user.email.register',
@@ -158,9 +168,19 @@ TuyaCloud.prototype.register = async function (options) {
   }
 };
 
-// A options.region
-// options.email
-// options.password
+/**
+* Helper to log in a user.
+* @param {Object} options
+* register options
+* @param {String} options.email
+* user's email
+* @param {String} options.password
+* user's password
+* @example
+* api.login({email: 'example@example.com',
+             password: 'example-password'}).then(sid => console.log('Session ID: ', sid))
+* @returns {Promise<String>} A Promise that contains the session ID
+*/
 TuyaCloud.prototype.login = async function (options) {
   try {
     const apiResult = await this.request({action: 'tuya.m.user.email.password.login',
@@ -175,12 +195,24 @@ TuyaCloud.prototype.login = async function (options) {
   }
 };
 
-// A options
-// options.timeout
-// [optional] options.devices // # of devices to wait for
-// It's possible to register multiple devices at once,
-// so this returns an array. If registering one device
-// wanted result is result[0].
+/**
+* Helper to wait for device(s) to be registered.
+* It's possible to register multiple devices at once,
+* so this returns an array.
+* @param {Object} options
+* options
+* @param {String} options.token
+* token being registered
+* @param {Number} [options.devices=1]
+* number of devices to wait for
+* @example
+* api.waitForToken({token: token.token}).then(result => {
+*   let device = result[0];
+*   console.log('Params:');
+*   console.log(JSON.stringify({id: device['id'], localKey: device['localKey']}));
+* });
+* @returns {Promise<Array>} A Promise that contains an array of registered devices
+*/
 TuyaCloud.prototype.waitForToken = function (options) {
   if (!options.devices) {
     options.devices = 1;
