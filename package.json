@@ -1,6 +1,6 @@
 {
   "name": "@tuyapi/cloud",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "A NodeJS wrapper for Tuya's cloud API",
   "main": "main.js",
   "dependencies": {
@@ -21,7 +21,9 @@
   },
   "xo": {
     "space": true,
-    "ignores": ["docs"],
+    "ignores": [
+      "docs"
+    ],
     "rules": {
       "max-len": [
         "error",
