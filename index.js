@@ -65,7 +65,7 @@ function TuyaCloud(options) {
 *              data: {'timeZone': '-05:00'}}).then(token => console.log(token))
 * @returns {Promise<Object>} A Promise that contains the response body parsed as JSON
 */
-TuyaCloud.prototype.request = function (options) {
+TuyaCloud.prototype.request = async function (options) {
   // Set to empty object if undefined
   options = is.undefined(options) ? {} : options;
 
@@ -121,20 +121,18 @@ TuyaCloud.prototype.request = function (options) {
 
   pairs.sign = md5(strToSign);
 
-  return new Promise(async (resolve, reject) => {
-    try {
-      const apiResult = await got(this.endpoint, {query: pairs});
-      const data = JSON.parse(apiResult.body);
+  try {
+    const apiResult = await got(this.endpoint, {query: pairs});
+    const data = JSON.parse(apiResult.body);
 
-      if (data.success === false) {
-        reject(new Error(data.errorCode));
-      }
-
-      resolve(data.result);
-    } catch (err) {
-      reject(err);
+    if (data.success === false) {
+      throw new Error(data.errorCode);
     }
-  });
+
+    return data.result;
+  } catch (err) {
+    throw err;
+  }
 };
 
 /**
