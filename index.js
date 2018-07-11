@@ -4,6 +4,7 @@ const randomize = require('randomatic');
 const sortObject = require('sort-keys-recursive');
 const md5 = require('md5');
 const delay = require('delay');
+const debug = require('debug')('@tuyapi/cloud');
 
 /**
 * A TuyaCloud object
@@ -122,8 +123,14 @@ TuyaCloud.prototype.request = async function (options) {
   pairs.sign = md5(strToSign);
 
   try {
+    debug('Sending parameters:');
+    debug(pairs);
+
     const apiResult = await got(this.endpoint, {query: pairs});
     const data = JSON.parse(apiResult.body);
+
+    debug('Received response:');
+    debug(apiResult.body);
 
     if (data.success === false) {
       throw new Error(data.errorCode);
