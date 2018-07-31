@@ -27,6 +27,9 @@
       "docs"
     ],
     "rules": {
+      "no-throw-literal": [
+        1
+      ],
       "max-len": [
         "error",
         {

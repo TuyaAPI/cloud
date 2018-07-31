@@ -51,6 +51,23 @@ function TuyaCloud(options) {
 }
 
 /**
+* Slices and dices an MD5 digest
+* to conform to Tuya's spec.
+* Don't ask why this is needed.
+* @param {String} data to hash
+* @returns {String} resulting digest
+* @private
+*/
+TuyaCloud.prototype._mobileHash = function (data) {
+  const preHash = md5(data);
+
+  return preHash.slice(8, 16) +
+         preHash.slice(0, 8) +
+         preHash.slice(24, 32) +
+         preHash.slice(16, 24);
+};
+
+/**
 * Sends an API request
 * @param {Object} options
 * request options
@@ -92,9 +109,9 @@ TuyaCloud.prototype.request = async function (options) {
   const pairs = {a: options.action,
                  deviceId: this.deviceID,
                  os: 'Linux',
+                 lang: 'en',
                  v: '1.0',
                  clientId: this.key,
-                 lang: 'en',
                  time: Math.round(d.getTime() / 1000),
                  postData: JSON.stringify(options.data)};
 
@@ -107,19 +124,31 @@ TuyaCloud.prototype.request = async function (options) {
                         'imsi', 'appVersion', 'ttid', 'isH5', 'h5Token', 'os',
                         'clientId', 'postData', 'time', 'n4h5', 'sid', 'sp'];
 
-  const out = [];
   const sortedPairs = sortObject(pairs);
 
+  let strToSign = '';
+
+  // Create string to sign
   for (const key in sortedPairs) {
     if (!valuesToSign.includes(key) || is.empty(pairs[key])) {
       continue;
+    } else if (key === 'postData') {
+      strToSign += key;
+      strToSign += '=';
+      strToSign += this._mobileHash(pairs[key]);
+      strToSign += '||';
     } else {
-      out.push(key + '=' + pairs[key]);
+      strToSign += key;
+      strToSign += '=';
+      strToSign += pairs[key];
+      strToSign += '||';
     }
   }
 
-  const strToSign = this.secret + out.join('|');
+  // Add secret
+  strToSign += this.secret;
 
+  // Sign string
   pairs.sign = md5(strToSign);
 
   try {
@@ -133,7 +162,7 @@ TuyaCloud.prototype.request = async function (options) {
     debug(apiResult.body);
 
     if (data.success === false) {
-      throw new Error(data.errorCode);
+      throw {code: data.errorCode, message: data.errorMsg};
     }
 
     return data.result;
@@ -163,13 +192,15 @@ TuyaCloud.prototype.register = async function (options) {
                                                  email: options.email,
                                                  passwd: md5(options.password)},
                                           requiresSID: false});
+
     this.sid = apiResult.sid;
     return this.sid;
   } catch (err) {
-    if (err.message === 'USER_NAME_IS_EXIST') {
+    if (err.code === 'USER_NAME_IS_EXIST') {
       return this.login(options);
     }
-    return err;
+
+    throw err;
   }
 };
 
@@ -196,7 +227,7 @@ TuyaCloud.prototype.login = async function (options) {
     this.sid = apiResult.sid;
     return this.sid;
   } catch (err) {
-    return err;
+    throw err;
   }
 };
 

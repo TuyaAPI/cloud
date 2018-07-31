@@ -1,7 +1,9 @@
 tuyapi/cloud [![Build Status](https://travis-ci.org/TuyaAPI/cloud.svg?branch=master)](https://travis-ci.org/TuyaAPI/cloud) [![Coverage Status](https://coveralls.io/repos/github/TuyaAPI/cloud/badge.svg?branch=master)](https://coveralls.io/github/TuyaAPI/cloud?branch=master) [![XO code style](https://img.shields.io/badge/code_style-XO-5ed9c7.svg)](https://github.com/xojs/xo)
 ==============
 
-A NodeJS wrapper for Tuya's [cloud API](https://docs.tuya.com/en/cloudapi/cloudAPI/index.html).
+A NodeJS wrapper for Tuya's [API](https://docs.tuya.com/en/cloudapi/appAPI/index.html).
+
+At the moment, only the [mobile/app API](https://docs.tuya.com/en/cloudapi/appAPI/index.html) is supported as it covers the vast majority of use cases.
 
 ## Installation
 `npm i @tuyapi/cloud`
@@ -10,7 +12,7 @@ A NodeJS wrapper for Tuya's [cloud API](https://docs.tuya.com/en/cloudapi/cloudA
 ```javascript
 const Cloud = require('@tuyapi/cloud');
 
-let api = new Cloud({key: 'your-api-key', secret: 'your-api-secret'});
+let api = new Cloud({key: 'your-api-app-key', secret: 'your-api-app-secret'});
 
 api.register({email: 'example@example.com', password: 'example-password'}).then(async sid => {
   let token = await api.request({action: 'tuya.m.device.token.create', data: {'timeZone': '-05:00'}});

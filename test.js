@@ -17,4 +17,16 @@ test('login a user', async t => {
   t.is(apiResult.length, 56);
 });
 
+test('create a token', async t => {
+  await api.register({email: 'hi@example.com',
+                      password: 'example-password'});
+
+  const token = await api.request({action: 'tuya.m.device.token.create',
+                                   data: {timeZone: '+08:00'}});
+
+  if (token.secret && token.token) {
+    t.pass();
+  }
+});
+
 test.todo('wait for token');
