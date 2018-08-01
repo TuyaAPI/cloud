@@ -262,7 +262,7 @@ TuyaCloud.prototype.waitForToken = function (options) {
                                                 data: {token: options.token}});
 
         if (tokenResult.length >= options.devices) {
-          resolve(tokenResult);
+          return resolve(tokenResult);
         }
 
         // Wait for 200 ms
