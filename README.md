@@ -5,7 +5,7 @@ A NodeJS wrapper for Tuya's [API](https://docs.tuya.com/en/cloudapi/appAPI/index
 
 At the moment, only the [mobile/app API](https://docs.tuya.com/en/cloudapi/appAPI/index.html) is supported as it covers the vast majority of use cases.
 
-Step-by-step instructions for acquiring API keys can be found [here](docs/apikeys/README.md).
+Step-by-step instructions for acquiring API keys can be found [here](https://tuyaapi.github.io/cloud/apikeys/).
 
 ## Installation
 `npm i @tuyapi/cloud`
