@@ -162,7 +162,7 @@ TuyaCloud.prototype.request = async function (options) {
     debug(apiResult.body);
 
     if (data.success === false) {
-      throw {code: data.errorCode, message: data.errorMsg};
+      throw new TuyaCloudRequestError({code: data.errorCode, message: data.errorMsg})
     }
 
     return data.result;
@@ -170,6 +170,13 @@ TuyaCloud.prototype.request = async function (options) {
     throw err;
   }
 };
+
+class TuyaCloudRequestError extends Error {
+  constructor(options) {
+    this.code = options.code;
+    this.message = options.message;
+  }
+}
 
 /**
 * Helper to register a new user. If user already exists, it instead attempts to log in.
