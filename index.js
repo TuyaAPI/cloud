@@ -47,6 +47,8 @@ function TuyaCloud(options) {
   } else if (options.region === 'EU') {
     this.region = 'EU';
     this.endpoint = 'https://a1.tuyaeu.com/api.json';
+  } else {
+    throw new Error('Bad region identifier.');
   }
 }
 
