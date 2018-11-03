@@ -162,7 +162,7 @@ TuyaCloud.prototype.request = async function (options) {
     debug(apiResult.body);
 
     if (data.success === false) {
-      throw new TuyaCloudRequestError({code: data.errorCode, message: data.errorMsg})
+      throw new TuyaCloudRequestError({code: data.errorCode, message: data.errorMsg});
     }
 
     return data.result;
