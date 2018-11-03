@@ -6,6 +6,15 @@ const md5 = require('md5');
 const delay = require('delay');
 const debug = require('debug')('@tuyapi/cloud');
 
+// Error object
+class TuyaCloudRequestError extends Error {
+  constructor(options) {
+    super();
+    this.code = options.code;
+    this.message = options.message;
+  }
+}
+
 /**
 * A TuyaCloud object
 * @class
@@ -172,13 +181,6 @@ TuyaCloud.prototype.request = async function (options) {
     throw err;
   }
 };
-
-class TuyaCloudRequestError extends Error {
-  constructor(options) {
-    this.code = options.code;
-    this.message = options.message;
-  }
-}
 
 /**
 * Helper to register a new user. If user already exists, it instead attempts to log in.
