@@ -29,4 +29,25 @@ test('create a token', async t => {
   }
 });
 
+if ('secret2' in apiKeys) {
+  // Assume we have all data to test new Tuya API
+  const newApi = new Cloud({key: apiKeys.key,
+                            secret: apiKeys.secret,
+                            secret2: apiKeys.secret2,
+                            certSign: apiKeys.certSign,
+                            apiEtVersion: '0.0.1'});
+
+  test('New API: register a new user', async t => {
+    const apiResult = await newApi.register({email: 'hi@example.com',
+                                             password: 'example-password'});
+    t.is(apiResult.length, 56);
+  });
+
+  test('New API: login a user', async t => {
+    const apiResult = await newApi.login({email: 'hi@example.com',
+                                          password: 'example-password'});
+    t.is(apiResult.length, 56);
+  });
+}
+
 test.todo('wait for token');

@@ -1,3 +1,4 @@
+const crypto = require('crypto');
 const is = require('is');
 const got = require('got');
 const randomize = require('randomatic');
@@ -21,6 +22,12 @@ class TuyaCloudRequestError extends Error {
 * @param {Object} options construction options
 * @param {String} options.key API key
 * @param {String} options.secret API secret
+* @param {String} [options.apiEtVersion]
+* Tag existing in new mobile api version (as const '0.0.1'),
+* @param {String} [options.secret2]
+* Second API secret token, stored in BMP file (mandatory if apiEtVersion is specified)
+* @param {String} [options.certSign]
+* App certificate SHA256 (mandatory if apiEtVersion is specified)
 * @param {String} [options.region='AZ'] region (AZ=Americas, AY=Asia, EU=Europe)
 * @param {String} [options.deviceID] ID of device calling API (defaults to a random value)
 * @example
@@ -37,6 +44,19 @@ function TuyaCloud(options) {
   } else {
     this.key = options.key;
     this.secret = options.secret;
+  }
+
+  // New API: check mandatory params
+  if (options.apiEtVersion) {
+    debug('using new API');
+    if (!options.secret2 || !options.certSign ||
+        options.secret2.length !== 32 || options.certSign.length !== 95) {
+      throw new Error('New API: invalid format for secret2 or certSign');
+    } else {
+      this.keyHmac = options.certSign + '_' + options.secret2 + '_' + options.secret;
+      this.apiEtVersion = options.apiEtVersion;
+      debug('key HMAC: ' + this.keyHmac);
+    }
   }
 
   // Device ID
@@ -126,6 +146,12 @@ TuyaCloud.prototype.request = async function (options) {
                  time: Math.round(d.getTime() / 1000),
                  postData: JSON.stringify(options.data)};
 
+  if (this.apiEtVersion) {
+    pairs.et = this.apiEtVersion;
+    pairs.ttid = 'tuya';
+    pairs.appVersion = '3.8.5';
+  }
+
   if (options.requiresSID) {
     pairs.sid = this.sid;
   }
@@ -133,7 +159,7 @@ TuyaCloud.prototype.request = async function (options) {
   // Generate signature for request
   const valuesToSign = ['a', 'v', 'lat', 'lon', 'lang', 'deviceId', 'imei',
                         'imsi', 'appVersion', 'ttid', 'isH5', 'h5Token', 'os',
-                        'clientId', 'postData', 'time', 'n4h5', 'sid', 'sp'];
+                        'clientId', 'postData', 'time', 'n4h5', 'sid', 'sp', 'et'];
 
   const sortedPairs = sortObject(pairs);
 
@@ -144,23 +170,36 @@ TuyaCloud.prototype.request = async function (options) {
     if (!valuesToSign.includes(key) || is.empty(pairs[key])) {
       continue;
     } else if (key === 'postData') {
+      if (strToSign) {
+        strToSign += '||';
+      }
       strToSign += key;
       strToSign += '=';
       strToSign += this._mobileHash(pairs[key]);
-      strToSign += '||';
     } else {
+      if (strToSign) {
+        strToSign += '||';
+      }
       strToSign += key;
       strToSign += '=';
       strToSign += pairs[key];
-      strToSign += '||';
     }
   }
 
-  // Add secret
-  strToSign += this.secret;
+  if (this.apiEtVersion) {
+    // New API, use HMAC-SHA256
+    debug('strToSign: ' + strToSign);
+    pairs.sign = crypto.createHmac('sha256', this.keyHmac)
+      .update(strToSign).digest('hex');
+  } else {
+    // Add secret
+    strToSign += '||';
+    strToSign += this.secret;
+    debug('strToSign: ' + strToSign);
 
-  // Sign string
-  pairs.sign = md5(strToSign);
+    // Sign string
+    pairs.sign = md5(strToSign);
+  }
 
   try {
     debug('Sending parameters:');
