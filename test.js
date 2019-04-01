@@ -48,6 +48,12 @@ if ('secret2' in apiKeys) {
                                           password: 'example-password'});
     t.is(apiResult.length, 56);
   });
+
+  test('New API: loginEx a user', async t => {
+    const apiResult = await newApi.loginEx({email: 'hi@example.com',
+                                            password: 'example-password'});
+    t.is(apiResult.length, 56);
+  });
 }
 
 test.todo('wait for token');

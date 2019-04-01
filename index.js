@@ -1,3 +1,5 @@
+/* eslint node/no-deprecated-api: [error, {ignoreModuleItems: ["constants"]}] */
+const constants = require('constants');
 const crypto = require('crypto');
 const is = require('is');
 const got = require('got');
@@ -6,6 +8,7 @@ const sortObject = require('sort-keys-recursive');
 const md5 = require('md5');
 const delay = require('delay');
 const debug = require('debug')('@tuyapi/cloud');
+const NodeRSA = require('node-rsa');
 
 // Error object
 class TuyaCloudRequestError extends Error {
@@ -279,6 +282,69 @@ TuyaCloud.prototype.login = async function (options) {
                                                  email: options.email,
                                                  passwd: md5(options.password)},
                                           requiresSID: false});
+    this.sid = apiResult.sid;
+    return this.sid;
+  } catch (err) {
+    throw err;
+  }
+};
+
+/**
+* Helper to log in a user using enhanced login process
+* @param {Object} options
+* register options
+* @param {String} options.email
+* user's email
+* @param {String} options.password
+* user's password
+* @example
+* api.loginEx({email: 'example@example.com',
+            password: 'example-password'}).then(sid => console.log('Session ID: ', sid))
+* @returns {Promise<String>} A Promise that contains the session ID
+*/
+TuyaCloud.prototype.loginEx = async function (options) {
+  try {
+    // Get token and empheral RSA public key
+    const token = await this.request({action: 'tuya.m.user.email.token.create',
+                                      data: {countryCode: '48',
+                                             email: options.email},
+                                      requiresSID: false});
+
+    // Create RSA public key: match the settings from mobile app (no padding)
+    const key = new NodeRSA({}, {
+      encryptionScheme: {
+        scheme: 'pkcs1',
+        padding: constants.RSA_NO_PADDING
+      }
+    });
+
+    key.importKey({
+      n: token.publicKey,
+      e: Number(token.exponent)
+    }, 'components-public');
+
+    const encryptedPass = key.encrypt(Buffer.from(md5(options.password)), 'hex');
+
+    const apiResult = await this.request({action: 'tuya.m.user.email.password.login',
+                                          data: {countryCode: '48',
+                                                 email: options.email,
+                                                 passwd: encryptedPass,
+                                                 ifencrypt: 1,
+                                                 options: {group: 1},
+                                                 token: token.token},
+                                          requiresSID: false});
+
+    // Change endpoint if necessary
+    // (the SID will only be vaild in endpoint given in response)
+    if (apiResult.domain.mobileApiUrl &&
+        !this.endpoint.startsWith(apiResult.domain.mobileApiUrl)) {
+      debug('Changing endpoints after logging: %s -> %s/api.json',
+        this.endpoint, apiResult.domain.mobileApiUrl);
+
+      this.endpoint = apiResult.domain.mobileApiUrl + '/api.json';
+      this.region = apiResult.domain.regionCode;
+    }
+
     this.sid = apiResult.sid;
     return this.sid;
   } catch (err) {
