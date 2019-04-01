@@ -106,6 +106,8 @@ TuyaCloud.prototype._mobileHash = function (data) {
 * API action to invoke (for example, 'tuya.cloud.device.token.create')
 * @param {Object} [options.data={}]
 * data to send in the request body
+* @param {String} [options.gid]
+* Group ID URL GET param (necessary for device-related actions)
 * @param {Boolean} [options.requiresSID=true]
 * set to false if the request doesn't require a session ID
 * @example
@@ -143,6 +145,9 @@ TuyaCloud.prototype.request = async function (options) {
 
   if (options.data) {
     pairs.postData = JSON.stringify(options.data);
+  }
+  if (options.gid) {
+    pairs.gid = options.gid;
   }
 
   if (this.apiEtVersion) {
