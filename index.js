@@ -127,10 +127,6 @@ TuyaCloud.prototype.request = async function (options) {
     throw new Error('Must specify an action to call.');
   }
 
-  if (!options.data) {
-    options.data = {};
-  }
-
   // Must have SID if we need it later
   if (!this.sid && options.requiresSID) {
     throw new Error('Must call login() first.');
@@ -143,8 +139,11 @@ TuyaCloud.prototype.request = async function (options) {
                  lang: 'en',
                  v: '1.0',
                  clientId: this.key,
-                 time: Math.round(d.getTime() / 1000),
-                 postData: JSON.stringify(options.data)};
+                 time: Math.round(d.getTime() / 1000)};
+
+  if (options.data) {
+    pairs.postData = JSON.stringify(options.data);
+  }
 
   if (this.apiEtVersion) {
     pairs.et = this.apiEtVersion;
@@ -159,7 +158,8 @@ TuyaCloud.prototype.request = async function (options) {
   // Generate signature for request
   const valuesToSign = ['a', 'v', 'lat', 'lon', 'lang', 'deviceId', 'imei',
                         'imsi', 'appVersion', 'ttid', 'isH5', 'h5Token', 'os',
-                        'clientId', 'postData', 'time', 'n4h5', 'sid', 'sp', 'et'];
+                        'clientId', 'postData', 'time', 'requestId', 'n4h5', 'sid',
+                        'sp', 'et'];
 
   const sortedPairs = sortObject(pairs);
 
