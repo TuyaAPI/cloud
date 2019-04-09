@@ -306,7 +306,7 @@ TuyaCloud.prototype.loginEx = async function (options) {
   try {
     // Get token and empheral RSA public key
     const token = await this.request({action: 'tuya.m.user.email.token.create',
-                                      data: {countryCode: '48',
+                                      data: {countryCode: this.region,
                                              email: options.email},
                                       requiresSID: false});
 
@@ -326,7 +326,7 @@ TuyaCloud.prototype.loginEx = async function (options) {
     const encryptedPass = key.encrypt(Buffer.from(md5(options.password)), 'hex');
 
     const apiResult = await this.request({action: 'tuya.m.user.email.password.login',
-                                          data: {countryCode: '48',
+                                          data: {countryCode: this.region,
                                                  email: options.email,
                                                  passwd: encryptedPass,
                                                  ifencrypt: 1,
