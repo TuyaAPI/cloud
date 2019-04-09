@@ -20,7 +20,9 @@ class TuyaCloudRequestError extends Error {
 }
 
 /**
-* A TuyaCloud object
+* A TuyaCloud object.
+* Providing `apiEtVersion` option means that the new sign mechanism (HMAC-SHA256)
+* instead of old (MD5) will be used. This also makes `secret2` and `certSign` mandatory.
 * @class
 * @param {Object} options construction options
 * @param {String} options.key API key
@@ -33,8 +35,12 @@ class TuyaCloudRequestError extends Error {
 * App certificate SHA256 (mandatory if apiEtVersion is specified)
 * @param {String} [options.region='AZ'] region (AZ=Americas, AY=Asia, EU=Europe)
 * @param {String} [options.deviceID] ID of device calling API (defaults to a random value)
-* @example
+* @example <caption>Using MD5 sign mechanism</caption>
 * const api = new Cloud({key: 'your-api-key', secret: 'your-api-secret'})
+* @example <caption>Using HMAC-SHA256 sign mechanism</caption>
+* const api = new Cloud({key: 'your-api-key', secret: 'your-api-secret',
+*                        apiEtVersion: '0.0.1', secret2: 'your-apm-secret2',
+*                        certSign: 'your-api-cert-sign'})
 */
 function TuyaCloud(options) {
   // Set to empty object if undefined
@@ -290,7 +296,7 @@ TuyaCloud.prototype.login = async function (options) {
 };
 
 /**
-* Helper to log in a user using enhanced login process
+* Helper to log in a user using enhanced login process (using empheral asymmetric RSA key)
 * @param {Object} options
 * register options
 * @param {String} options.email
