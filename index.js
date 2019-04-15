@@ -1,5 +1,3 @@
-/* eslint node/no-deprecated-api: [error, {ignoreModuleItems: ["constants"]}] */
-const constants = require('constants');
 const crypto = require('crypto');
 const is = require('is');
 const got = require('got');
@@ -320,7 +318,7 @@ TuyaCloud.prototype.loginEx = async function (options) {
     const key = new NodeRSA({}, {
       encryptionScheme: {
         scheme: 'pkcs1',
-        padding: constants.RSA_NO_PADDING
+        padding: NodeRSA.RSA_NO_PADDING
       }
     });
 
