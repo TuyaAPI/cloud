@@ -5,12 +5,21 @@ A NodeJS wrapper for Tuya's [API](https://docs.tuya.com/en/cloudapi/appAPI/index
 
 At the moment, only the [mobile/app API](https://docs.tuya.com/en/cloudapi/appAPI/index.html) is supported as it covers the vast majority of use cases.
 
-Step-by-step instructions for acquiring API keys can be found [here](https://tuyaapi.github.io/cloud/apikeys/).
+There are two modes of operation:
+- the `old` API - described in the docs, using MD5 as a sign mechanism
+- the `new` API - reverse-engineered from TuyaSmart android App, using HMAC-SHA256 as a sign mechanism
+
+If You can, use the `old` API, unfortunately for some clientId's it's not possible anymore (eg. clientId used by TuyaSmart app). To use the the new API You need to specify `apiEtVersion` in constructor (currently `'0.0.1'`).
+
+Step-by-step instructions for acquiring keys for old API can be found [here](https://tuyaapi.github.io/cloud/apikeys/).
+
+Obtaining keys for new API (additional `secret2` and `certSign`) involves disassembling obtained APK file (either official app or generated "demo" app from iot.tuya.com). For details see [tuya-sign-hacking repo](https://github.com/nalajcie/tuya-sign-hacking).
 
 ## Installation
 `npm i @tuyapi/cloud`
 
 ## Usage
+old API:
 ```javascript
 const Cloud = require('@tuyapi/cloud');
 
@@ -23,6 +32,32 @@ api.register({email: 'example@example.com', password: 'example-password'}).then(
 });
 ```
 
+new API - listing all devices in all groups:
+```javascript
+const Cloud = require('@tuyapi/cloud');
+
+let api = new Cloud({key: apiKeys.key,
+                     secret: apiKeys.secret,
+                     secret2: apiKeys.secret2,
+                     certSign: apiKeys.certSign,
+                     apiEtVersion: '0.0.1',
+                     region: 'EU'});
+
+api.loginEx({email: myEmail, password: myPassword}).then(async sid => {
+  console.log(sid);
+
+  api.request({action: "tuya.m.location.list"}).then(async groups => {
+    for (const group of groups) {
+      api.request({action: 'tuya.m.my.group.device.list', gid: group.groupId}).then(async devicesArr => {
+        for (const device of devicesArr) {
+           console.log('group: "%s"\tdevice: "%s"\tdevId: "%s"', group.name, device.name, device.devId);
+        }
+      });
+    }
+  });
+});
+```
+
 [Documentation](https://tuyaapi.github.io/cloud/)
 
 ## Development
@@ -32,6 +67,7 @@ api.register({email: 'example@example.com', password: 'example-password'}).then(
 {
   "key": "your-api-key",
   "secret": "your-api-secret"
+  // for new API: add also secret2 and certSign
 }
 ```
 3. Create a file called `dev.js` as a playground. Since `dev.js` is in `.gitignore`, it won't be committed.
