@@ -6,4 +6,5 @@ install:
 script:
 - npm run cover
 before_install:
-- openssl aes-256-cbc -K $encrypted_d40b9ba85017_key -iv $encrypted_d40b9ba85017_iv -in keys.json.enc -out keys.json -d
+- openssl aes-256-cbc -K $encrypted_d40b9ba85017_key -iv $encrypted_d40b9ba85017_iv
+  -in keys.json.enc -out keys.json -d
