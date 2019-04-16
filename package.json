@@ -50,7 +50,7 @@
   "scripts": {
     "test": "xo && ava",
     "cover": "nyc npm test && nyc report --reporter=text-lcov | coveralls",
-    "document": "documentation build index.js -f html -o docs"
+    "document": "npx documentation build index.js -f html -o docs"
   },
   "repository": {
     "type": "git",

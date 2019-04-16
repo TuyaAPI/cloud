@@ -33,9 +33,9 @@ class TuyaCloudRequestError extends Error {
 * App certificate SHA256 (mandatory if apiEtVersion is specified)
 * @param {String} [options.region='AZ'] region (AZ=Americas, AY=Asia, EU=Europe)
 * @param {String} [options.deviceID] ID of device calling API (defaults to a random value)
-* @example <caption>Using MD5 sign mechanism</caption>
+* @example <caption>Using the MD5 signing mechanism:</caption>
 * const api = new Cloud({key: 'your-api-key', secret: 'your-api-secret'})
-* @example <caption>Using HMAC-SHA256 sign mechanism</caption>
+* @example <caption>Using the HMAC-SHA256 signing mechanism:</caption>
 * const api = new Cloud({key: 'your-api-key', secret: 'your-api-secret',
 *                        apiEtVersion: '0.0.1', secret2: 'your-apm-secret2',
 *                        certSign: 'your-api-cert-sign'})
