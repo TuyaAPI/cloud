@@ -1,3 +1,4 @@
+const crypto = require('crypto');
 const is = require('is');
 const got = require('got');
 const randomize = require('randomatic');
@@ -5,6 +6,7 @@ const sortObject = require('sort-keys-recursive');
 const md5 = require('md5');
 const delay = require('delay');
 const debug = require('debug')('@tuyapi/cloud');
+const NodeRSA = require('node-rsa');
 
 // Error object
 class TuyaCloudRequestError extends Error {
@@ -16,15 +18,27 @@ class TuyaCloudRequestError extends Error {
 }
 
 /**
-* A TuyaCloud object
+* A TuyaCloud object.
+* Providing `apiEtVersion` option means that the new sign mechanism (HMAC-SHA256)
+* instead of old (MD5) will be used. This also makes `secret2` and `certSign` mandatory.
 * @class
 * @param {Object} options construction options
 * @param {String} options.key API key
 * @param {String} options.secret API secret
+* @param {String} [options.apiEtVersion]
+* Tag existing in new mobile api version (as const '0.0.1'),
+* @param {String} [options.secret2]
+* Second API secret token, stored in BMP file (mandatory if apiEtVersion is specified)
+* @param {String} [options.certSign]
+* App certificate SHA256 (mandatory if apiEtVersion is specified)
 * @param {String} [options.region='AZ'] region (AZ=Americas, AY=Asia, EU=Europe)
 * @param {String} [options.deviceID] ID of device calling API (defaults to a random value)
-* @example
+* @example <caption>Using the MD5 signing mechanism:</caption>
 * const api = new Cloud({key: 'your-api-key', secret: 'your-api-secret'})
+* @example <caption>Using the HMAC-SHA256 signing mechanism:</caption>
+* const api = new Cloud({key: 'your-api-key', secret: 'your-api-secret',
+*                        apiEtVersion: '0.0.1', secret2: 'your-apm-secret2',
+*                        certSign: 'your-api-cert-sign'})
 */
 function TuyaCloud(options) {
   // Set to empty object if undefined
@@ -37,6 +51,19 @@ function TuyaCloud(options) {
   } else {
     this.key = options.key;
     this.secret = options.secret;
+  }
+
+  // New API: check mandatory params
+  if (options.apiEtVersion) {
+    debug('using new API');
+    if (!options.secret2 || !options.certSign ||
+        options.secret2.length !== 32 || options.certSign.length !== 95) {
+      throw new Error('New API: invalid format for secret2 or certSign');
+    } else {
+      this.keyHmac = options.certSign + '_' + options.secret2 + '_' + options.secret;
+      this.apiEtVersion = options.apiEtVersion;
+      debug('key HMAC: ' + this.keyHmac);
+    }
   }
 
   // Device ID
@@ -86,6 +113,8 @@ TuyaCloud.prototype._mobileHash = function (data) {
 * API action to invoke (for example, 'tuya.cloud.device.token.create')
 * @param {Object} [options.data={}]
 * data to send in the request body
+* @param {String} [options.gid]
+* Group ID URL GET param (necessary for device-related actions)
 * @param {Boolean} [options.requiresSID=true]
 * set to false if the request doesn't require a session ID
 * @example
@@ -107,10 +136,6 @@ TuyaCloud.prototype.request = async function (options) {
     throw new Error('Must specify an action to call.');
   }
 
-  if (!options.data) {
-    options.data = {};
-  }
-
   // Must have SID if we need it later
   if (!this.sid && options.requiresSID) {
     throw new Error('Must call login() first.');
@@ -123,8 +148,20 @@ TuyaCloud.prototype.request = async function (options) {
                  lang: 'en',
                  v: '1.0',
                  clientId: this.key,
-                 time: Math.round(d.getTime() / 1000),
-                 postData: JSON.stringify(options.data)};
+                 time: Math.round(d.getTime() / 1000)};
+
+  if (options.data) {
+    pairs.postData = JSON.stringify(options.data);
+  }
+  if (options.gid) {
+    pairs.gid = options.gid;
+  }
+
+  if (this.apiEtVersion) {
+    pairs.et = this.apiEtVersion;
+    pairs.ttid = 'tuya';
+    pairs.appVersion = '3.8.5';
+  }
 
   if (options.requiresSID) {
     pairs.sid = this.sid;
@@ -133,7 +170,8 @@ TuyaCloud.prototype.request = async function (options) {
   // Generate signature for request
   const valuesToSign = ['a', 'v', 'lat', 'lon', 'lang', 'deviceId', 'imei',
                         'imsi', 'appVersion', 'ttid', 'isH5', 'h5Token', 'os',
-                        'clientId', 'postData', 'time', 'n4h5', 'sid', 'sp'];
+                        'clientId', 'postData', 'time', 'requestId', 'n4h5', 'sid',
+                        'sp', 'et'];
 
   const sortedPairs = sortObject(pairs);
 
@@ -144,23 +182,36 @@ TuyaCloud.prototype.request = async function (options) {
     if (!valuesToSign.includes(key) || is.empty(pairs[key])) {
       continue;
     } else if (key === 'postData') {
+      if (strToSign) {
+        strToSign += '||';
+      }
       strToSign += key;
       strToSign += '=';
       strToSign += this._mobileHash(pairs[key]);
-      strToSign += '||';
     } else {
+      if (strToSign) {
+        strToSign += '||';
+      }
       strToSign += key;
       strToSign += '=';
       strToSign += pairs[key];
-      strToSign += '||';
     }
   }
 
-  // Add secret
-  strToSign += this.secret;
+  if (this.apiEtVersion) {
+    // New API, use HMAC-SHA256
+    debug('strToSign: ' + strToSign);
+    pairs.sign = crypto.createHmac('sha256', this.keyHmac)
+      .update(strToSign).digest('hex');
+  } else {
+    // Add secret
+    strToSign += '||';
+    strToSign += this.secret;
+    debug('strToSign: ' + strToSign);
 
-  // Sign string
-  pairs.sign = md5(strToSign);
+    // Sign string
+    pairs.sign = md5(strToSign);
+  }
 
   try {
     debug('Sending parameters:');
@@ -235,6 +286,69 @@ TuyaCloud.prototype.login = async function (options) {
                                                  email: options.email,
                                                  passwd: md5(options.password)},
                                           requiresSID: false});
+    this.sid = apiResult.sid;
+    return this.sid;
+  } catch (err) {
+    throw err;
+  }
+};
+
+/**
+* Helper to log in a user using enhanced login process (using empheral asymmetric RSA key)
+* @param {Object} options
+* register options
+* @param {String} options.email
+* user's email
+* @param {String} options.password
+* user's password
+* @example
+* api.loginEx({email: 'example@example.com',
+            password: 'example-password'}).then(sid => console.log('Session ID: ', sid))
+* @returns {Promise<String>} A Promise that contains the session ID
+*/
+TuyaCloud.prototype.loginEx = async function (options) {
+  try {
+    // Get token and empheral RSA public key
+    const token = await this.request({action: 'tuya.m.user.email.token.create',
+                                      data: {countryCode: this.region,
+                                             email: options.email},
+                                      requiresSID: false});
+
+    // Create RSA public key: match the settings from mobile app (no padding)
+    const key = new NodeRSA({}, {
+      encryptionScheme: {
+        scheme: 'pkcs1',
+        padding: crypto.constants.RSA_NO_PADDING
+      }
+    });
+
+    key.importKey({
+      n: token.publicKey,
+      e: Number(token.exponent)
+    }, 'components-public');
+
+    const encryptedPass = key.encrypt(Buffer.from(md5(options.password)), 'hex');
+
+    const apiResult = await this.request({action: 'tuya.m.user.email.password.login',
+                                          data: {countryCode: this.region,
+                                                 email: options.email,
+                                                 passwd: encryptedPass,
+                                                 ifencrypt: 1,
+                                                 options: {group: 1},
+                                                 token: token.token},
+                                          requiresSID: false});
+
+    // Change endpoint if necessary
+    // (the SID will only be vaild in endpoint given in response)
+    if (apiResult.domain.mobileApiUrl &&
+        !this.endpoint.startsWith(apiResult.domain.mobileApiUrl)) {
+      debug('Changing endpoints after logging: %s -> %s/api.json',
+        this.endpoint, apiResult.domain.mobileApiUrl);
+
+      this.endpoint = apiResult.domain.mobileApiUrl + '/api.json';
+      this.region = apiResult.domain.regionCode;
+    }
+
     this.sid = apiResult.sid;
     return this.sid;
   } catch (err) {
