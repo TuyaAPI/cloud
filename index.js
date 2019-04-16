@@ -318,7 +318,7 @@ TuyaCloud.prototype.loginEx = async function (options) {
     const key = new NodeRSA({}, {
       encryptionScheme: {
         scheme: 'pkcs1',
-        padding: NodeRSA.RSA_NO_PADDING
+        padding: crypto.constants.RSA_NO_PADDING
       }
     });
 
