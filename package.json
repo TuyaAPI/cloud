@@ -9,6 +9,7 @@
     "got": "^8.3.1",
     "is": "^3.2.1",
     "md5": "^2.2.1",
+    "node-rsa": "^1.0.5",
     "randomatic": "^3.0.0",
     "sort-keys-recursive": "^2.0.1"
   },
@@ -18,7 +19,6 @@
   "devDependencies": {
     "ava": "^0.25.0",
     "coveralls": "^3.0.1",
-    "node-rsa": "^1.0.5",
     "nyc": "^11.8.0",
     "xo": "^0.21.1"
   },
