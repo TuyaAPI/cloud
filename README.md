@@ -3,7 +3,7 @@ tuyapi/cloud [![Build Status](https://travis-ci.org/TuyaAPI/cloud.svg?branch=mas
 
 A NodeJS wrapper for Tuya's [API](https://docs.tuya.com/en/cloudapi/appAPI/index.html).
 
-At the moment, only the [mobile/app API](https://docs.tuya.com/en/cloudapi/appAPI/index.html) is supported as it covers the vast majority of use cases.
+At the moment, only the [mobile/app API](https://web.archive.org/web/20180613132925/https://docs.tuya.com/en/cloudapi/appAPI/index.html) (as captured by web.archive.org) is supported as it covers the vast majority of use cases.
 
 There are two modes of operation:
 - the 'old' API - described in the docs, using MD5 as a sign mechanism
