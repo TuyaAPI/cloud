@@ -31,6 +31,7 @@ class TuyaCloudRequestError extends Error {
 * App certificate SHA256 (mandatory if apiEtVersion is specified)
 * @param {String} [options.region='AZ'] region (AZ=Americas, AY=Asia, EU=Europe)
 * @param {String} [options.deviceID] ID of device calling API (defaults to a random value)
+* @param {String} [options.ttid] app id (defaults to 'tuya'), alternative is "smart_life" depending on used App
 * @example <caption>Using the MD5 signing mechanism:</caption>
 * const api = new Cloud({key: 'your-api-key', secret: 'your-api-secret'})
 * @example <caption>Using the HMAC-SHA256 signing mechanism:</caption>
@@ -60,6 +61,7 @@ function TuyaCloud(options) {
     } else {
       this.keyHmac = options.certSign + '_' + options.secret2 + '_' + options.secret;
       this.apiEtVersion = options.apiEtVersion;
+      this.ttid = options.ttid || 'tuya';
       debug('key HMAC: ' + this.keyHmac);
     }
   }
@@ -79,7 +81,7 @@ function TuyaCloud(options) {
     this.region = 'AY';
     this.endpoint = 'https://a1.tuyacn.com/api.json';
   } else if (options.region === 'EU') {
-    this.region = 'EU'; // 49
+    this.region = 'EU';
     this.endpoint = 'https://a1.tuyaeu.com/api.json';
   } else {
     throw new Error('Bad region identifier.');
@@ -157,7 +159,7 @@ TuyaCloud.prototype.request = async function (options) {
 
   if (this.apiEtVersion) {
     pairs.et = this.apiEtVersion;
-    pairs.ttid = 'tuya';
+    pairs.ttid = this.ttid;
     pairs.appVersion = '3.8.5';
     pairs.appRnVersion = '5.11';
     pairs.platform = 'Android';
@@ -398,7 +400,7 @@ TuyaCloud.prototype.waitForToken = function (options) {
         reject(err);
       }
     }
-    reject(new Error('Timed out wating for device(s) to connect to cloud'));
+    reject(new Error('Timed out waiting for device(s) to connect to cloud'));
   });
 };
 
