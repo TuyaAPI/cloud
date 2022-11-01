@@ -1,13 +1,11 @@
 const crypto = require('crypto');
 const is = require('is');
-const got = require('got');
+const got = require('@esm2cjs/got').default;
 const randomize = require('randomatic');
 const sortObject = require('sort-keys-recursive');
-const md5 = require('md5');
-const delay = require('delay');
 const debug = require('debug')('@tuyapi/cloud');
 const NodeRSA = require('node-rsa');
-
+const {v4: uuidv4} = require('uuid');
 // Error object
 class TuyaCloudRequestError extends Error {
   constructor(options) {
@@ -81,7 +79,7 @@ function TuyaCloud(options) {
     this.region = 'AY';
     this.endpoint = 'https://a1.tuyacn.com/api.json';
   } else if (options.region === 'EU') {
-    this.region = 'EU';
+    this.region = 'EU'; // 49
     this.endpoint = 'https://a1.tuyaeu.com/api.json';
   } else {
     throw new Error('Bad region identifier.');
@@ -144,7 +142,7 @@ TuyaCloud.prototype.request = async function (options) {
   const d = new Date();
   const pairs = {a: options.action,
                  deviceId: this.deviceID,
-                 os: 'Linux',
+                 os: 'Android',
                  lang: 'en',
                  v: '1.0',
                  clientId: this.key,
@@ -161,6 +159,9 @@ TuyaCloud.prototype.request = async function (options) {
     pairs.et = this.apiEtVersion;
     pairs.ttid = 'tuya';
     pairs.appVersion = '3.8.5';
+    pairs.appRnVersion = '5.11';
+    pairs.platform = 'Android';
+    pairs.requestId = uuidv4();
   }
 
   if (options.requiresSID) {
@@ -215,9 +216,9 @@ TuyaCloud.prototype.request = async function (options) {
 
   try {
     debug('Sending parameters:');
-    debug(pairs);
+    debug(JSON.stringify(pairs));
 
-    const apiResult = await got(this.endpoint, {query: pairs});
+    const apiResult = await got(this.endpoint, {searchParams: pairs});
     const data = JSON.parse(apiResult.body);
 
     debug('Received response:');
@@ -401,4 +402,10 @@ TuyaCloud.prototype.waitForToken = function (options) {
   });
 };
 
+function delay(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+function md5(data) {
+  return crypto.createHash('md5').update(data).digest('hex');
+}
 module.exports = TuyaCloud;
