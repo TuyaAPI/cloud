@@ -1,6 +1,6 @@
 const crypto = require('crypto');
 const is = require('is');
-const got = require('got').default;
+const got = require('got');
 const randomize = require('randomatic');
 const sortObject = require('sort-keys-recursive');
 const debug = require('debug')('@tuyapi/cloud');
