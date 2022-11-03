@@ -29,9 +29,10 @@ class TuyaCloudRequestError extends Error {
 * Second API secret token, stored in BMP file (mandatory if apiEtVersion is specified)
 * @param {String} [options.certSign]
 * App certificate SHA256 (mandatory if apiEtVersion is specified)
-* @param {String} [options.region='AZ'] region (AZ=Americas, AY=Asia, EU=Europe)
+* @param {String} [options.region='AZ'] region (AZ=Americas, AY=Asia, EU=Europe, IN=India)
 * @param {String} [options.deviceID] ID of device calling API (defaults to a random value)
 * @param {String} [options.ttid] app id (defaults to 'tuya'), alternative is "smart_life" depending on used App
+* @param {String} [options.sid] session id if obtained in the past to reuse (optional)
 * @example <caption>Using the MD5 signing mechanism:</caption>
 * const api = new Cloud({key: 'your-api-key', secret: 'your-api-secret'})
 * @example <caption>Using the HMAC-SHA256 signing mechanism:</caption>
@@ -83,8 +84,16 @@ function TuyaCloud(options) {
   } else if (options.region === 'EU') {
     this.region = 'EU';
     this.endpoint = 'https://a1.tuyaeu.com/api.json';
+  } else if (options.region === 'IN') {
+      this.region = 'IN';
+      this.endpoint = 'https://a1.tuyain.com/api.json';
   } else {
     throw new Error('Bad region identifier.');
+  }
+
+  // Session ID
+  if (!is.undefined(options.sid)) {
+    this.sid = options.sid;
   }
 }
 
