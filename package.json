@@ -5,7 +5,7 @@
   "main": "index.js",
   "dependencies": {
     "debug": "^4.3.4",
-    "@esm2cjs/got": "^12.5.2",
+    "got": "^11.8.5",
     "is": "^3.3.0",
     "node-rsa": "^1.1.1",
     "randomatic": "^3.1.1",
