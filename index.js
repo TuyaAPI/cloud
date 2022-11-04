@@ -29,7 +29,8 @@ class TuyaCloudRequestError extends Error {
 * Second API secret token, stored in BMP file (mandatory if apiEtVersion is specified)
 * @param {String} [options.certSign]
 * App certificate SHA256 (mandatory if apiEtVersion is specified)
-* @param {String} [options.region='AZ'] region (AZ=Americas, AY=Asia, EU=Europe, IN=India)
+* @param {String} [options.region='AZ'] region (AZ=Americas, AY=Asia, EU=Europe, IN=India) - or a region saved earlier
+* @param {String} [options.endpoint] endpoint stored after a former loginEx call (mostly together with sid and region)
 * @param {String} [options.deviceID] ID of device calling API (defaults to a random value)
 * @param {String} [options.ttid] app id (defaults to 'tuya'), alternative is "smart_life" depending on used App
 * @param {String} [options.sid] session id if obtained in the past to reuse (optional)
@@ -74,8 +75,13 @@ function TuyaCloud(options) {
     this.deviceID = options.deviceID;
   }
 
+  // Endpoint
+  if (!is.undefined(options.endpoint) && !is.undefined(options.region)) {
+    this.endpoint = options.endpoint;
+    this.region = options.region;
+  }
   // Region
-  if (is.undefined(options.region) || options.region === 'AZ') {
+  else if (is.undefined(options.region) || options.region === 'AZ') {
     this.region = 'AZ';
     this.endpoint = 'https://a1.tuyaus.com/api.json';
   } else if (options.region === 'AY') {
@@ -286,10 +292,11 @@ TuyaCloud.prototype.register = async function (options) {
 * user's email
 * @param {String} options.password
 * user's password
-* @example
+* @param {String} options.returnFullLoginResponse
+* true to return the full login response, false to return just the session ID* @example
 * api.login({email: 'example@example.com',
              password: 'example-password'}).then(sid => console.log('Session ID: ', sid))
-* @returns {Promise<String>} A Promise that contains the session ID
+* @returns {Promise<String|Object>} A Promise that contains the session ID
 */
 TuyaCloud.prototype.login = async function (options) {
   try {
@@ -299,6 +306,9 @@ TuyaCloud.prototype.login = async function (options) {
                                                  passwd: md5(options.password)},
                                           requiresSID: false});
     this.sid = apiResult.sid;
+    if (is.boolean(options.returnFullLoginResponse) && options.returnFullLoginResponse) {
+      return apiResult;
+    }
     return this.sid;
   } catch (err) {
     throw err;
@@ -313,10 +323,11 @@ TuyaCloud.prototype.login = async function (options) {
 * user's email
 * @param {String} options.password
 * user's password
-* @example
+* @param {String} options.returnFullLoginResponse
+* true to return the full login response, false to return just the session ID
 * api.loginEx({email: 'example@example.com',
             password: 'example-password'}).then(sid => console.log('Session ID: ', sid))
-* @returns {Promise<String>} A Promise that contains the session ID
+* @returns {Promise<String|Object>} A Promise that contains the session ID
 */
 TuyaCloud.prototype.loginEx = async function (options) {
   try {
@@ -362,6 +373,9 @@ TuyaCloud.prototype.loginEx = async function (options) {
     }
 
     this.sid = apiResult.sid;
+    if (is.boolean(options.returnFullLoginResponse) && options.returnFullLoginResponse) {
+        return apiResult;
+    }
     return this.sid;
   } catch (err) {
     throw err;
