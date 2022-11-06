@@ -3,11 +3,9 @@ const is = require('is');
 const got = require('got');
 const randomize = require('randomatic');
 const sortObject = require('sort-keys-recursive');
-const md5 = require('md5');
-const delay = require('delay');
 const debug = require('debug')('@tuyapi/cloud');
 const NodeRSA = require('node-rsa');
-
+const {v4: uuidv4} = require('uuid');
 // Error object
 class TuyaCloudRequestError extends Error {
   constructor(options) {
@@ -31,8 +29,11 @@ class TuyaCloudRequestError extends Error {
 * Second API secret token, stored in BMP file (mandatory if apiEtVersion is specified)
 * @param {String} [options.certSign]
 * App certificate SHA256 (mandatory if apiEtVersion is specified)
-* @param {String} [options.region='AZ'] region (AZ=Americas, AY=Asia, EU=Europe)
+* @param {String} [options.region='AZ'] region (AZ=Americas, AY=Asia, EU=Europe, IN=India) - or a region saved earlier
+* @param {String} [options.endpoint] endpoint stored after a former loginEx call (mostly together with sid and region)
 * @param {String} [options.deviceID] ID of device calling API (defaults to a random value)
+* @param {String} [options.ttid] app id (defaults to 'tuya'), alternative is "smart_life" depending on used App
+* @param {String} [options.sid] session id if obtained in the past to reuse (optional)
 * @example <caption>Using the MD5 signing mechanism:</caption>
 * const api = new Cloud({key: 'your-api-key', secret: 'your-api-secret'})
 * @example <caption>Using the HMAC-SHA256 signing mechanism:</caption>
@@ -62,6 +63,7 @@ function TuyaCloud(options) {
     } else {
       this.keyHmac = options.certSign + '_' + options.secret2 + '_' + options.secret;
       this.apiEtVersion = options.apiEtVersion;
+      this.ttid = options.ttid || 'tuya';
       debug('key HMAC: ' + this.keyHmac);
     }
   }
@@ -73,8 +75,13 @@ function TuyaCloud(options) {
     this.deviceID = options.deviceID;
   }
 
+  // Endpoint
+  if (!is.undefined(options.endpoint) && !is.undefined(options.region)) {
+    this.endpoint = options.endpoint;
+    this.region = options.region;
+  }
   // Region
-  if (is.undefined(options.region) || options.region === 'AZ') {
+  else if (is.undefined(options.region) || options.region === 'AZ') {
     this.region = 'AZ';
     this.endpoint = 'https://a1.tuyaus.com/api.json';
   } else if (options.region === 'AY') {
@@ -83,8 +90,16 @@ function TuyaCloud(options) {
   } else if (options.region === 'EU') {
     this.region = 'EU';
     this.endpoint = 'https://a1.tuyaeu.com/api.json';
+  } else if (options.region === 'IN') {
+      this.region = 'IN';
+      this.endpoint = 'https://a1.tuyain.com/api.json';
   } else {
     throw new Error('Bad region identifier.');
+  }
+
+  // Session ID
+  if (!is.undefined(options.sid)) {
+    this.sid = options.sid;
   }
 }
 
@@ -144,7 +159,7 @@ TuyaCloud.prototype.request = async function (options) {
   const d = new Date();
   const pairs = {a: options.action,
                  deviceId: this.deviceID,
-                 os: 'Linux',
+                 os: 'Android',
                  lang: 'en',
                  v: '1.0',
                  clientId: this.key,
@@ -159,8 +174,11 @@ TuyaCloud.prototype.request = async function (options) {
 
   if (this.apiEtVersion) {
     pairs.et = this.apiEtVersion;
-    pairs.ttid = 'tuya';
+    pairs.ttid = this.ttid;
     pairs.appVersion = '3.8.5';
+    pairs.appRnVersion = '5.11';
+    pairs.platform = 'Android';
+    pairs.requestId = uuidv4();
   }
 
   if (options.requiresSID) {
@@ -215,9 +233,9 @@ TuyaCloud.prototype.request = async function (options) {
 
   try {
     debug('Sending parameters:');
-    debug(pairs);
+    debug(JSON.stringify(pairs));
 
-    const apiResult = await got(this.endpoint, {query: pairs});
+    const apiResult = await got(this.endpoint, {searchParams: pairs});
     const data = JSON.parse(apiResult.body);
 
     debug('Received response:');
@@ -274,10 +292,11 @@ TuyaCloud.prototype.register = async function (options) {
 * user's email
 * @param {String} options.password
 * user's password
-* @example
+* @param {String} options.returnFullLoginResponse
+* true to return the full login response, false to return just the session ID* @example
 * api.login({email: 'example@example.com',
              password: 'example-password'}).then(sid => console.log('Session ID: ', sid))
-* @returns {Promise<String>} A Promise that contains the session ID
+* @returns {Promise<String|Object>} A Promise that contains the session ID
 */
 TuyaCloud.prototype.login = async function (options) {
   try {
@@ -287,6 +306,9 @@ TuyaCloud.prototype.login = async function (options) {
                                                  passwd: md5(options.password)},
                                           requiresSID: false});
     this.sid = apiResult.sid;
+    if (is.boolean(options.returnFullLoginResponse) && options.returnFullLoginResponse) {
+      return apiResult;
+    }
     return this.sid;
   } catch (err) {
     throw err;
@@ -301,10 +323,11 @@ TuyaCloud.prototype.login = async function (options) {
 * user's email
 * @param {String} options.password
 * user's password
-* @example
+* @param {String} options.returnFullLoginResponse
+* true to return the full login response, false to return just the session ID
 * api.loginEx({email: 'example@example.com',
             password: 'example-password'}).then(sid => console.log('Session ID: ', sid))
-* @returns {Promise<String>} A Promise that contains the session ID
+* @returns {Promise<String|Object>} A Promise that contains the session ID
 */
 TuyaCloud.prototype.loginEx = async function (options) {
   try {
@@ -350,6 +373,9 @@ TuyaCloud.prototype.loginEx = async function (options) {
     }
 
     this.sid = apiResult.sid;
+    if (is.boolean(options.returnFullLoginResponse) && options.returnFullLoginResponse) {
+        return apiResult;
+    }
     return this.sid;
   } catch (err) {
     throw err;
@@ -397,8 +423,14 @@ TuyaCloud.prototype.waitForToken = function (options) {
         reject(err);
       }
     }
-    reject(new Error('Timed out wating for device(s) to connect to cloud'));
+    reject(new Error('Timed out waiting for device(s) to connect to cloud'));
   });
 };
 
+function delay(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+function md5(data) {
+  return crypto.createHash('md5').update(data).digest('hex');
+}
 module.exports = TuyaCloud;
