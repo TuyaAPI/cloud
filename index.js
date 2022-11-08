@@ -130,6 +130,8 @@ TuyaCloud.prototype._mobileHash = function (data) {
 * data to send in the request body
 * @param {String} [options.gid]
 * Group ID URL GET param (necessary for device-related actions)
+* @param {String} [options.version='1.0']
+* API version to use for the request (some IR related calls require '5.0' as version)
 * @param {Boolean} [options.requiresSID=true]
 * set to false if the request doesn't require a session ID
 * @example
@@ -161,7 +163,7 @@ TuyaCloud.prototype.request = async function (options) {
                  deviceId: this.deviceID,
                  os: 'Android',
                  lang: 'en',
-                 v: '1.0',
+                 v: options.version || '1.0',
                  clientId: this.key,
                  time: Math.round(d.getTime() / 1000)};
 
