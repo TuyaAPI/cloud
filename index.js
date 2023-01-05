@@ -237,7 +237,12 @@ TuyaCloud.prototype.request = async function (options) {
     debug('Sending parameters:');
     debug(JSON.stringify(pairs));
 
-    const apiResult = await got(this.endpoint, {searchParams: pairs});
+    const apiResult = await got(this.endpoint, {
+      searchParams: pairs,
+      timeout: {
+        request: 10000
+      }
+    });
     const data = JSON.parse(apiResult.body);
 
     debug('Received response:');
