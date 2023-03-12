@@ -58,7 +58,8 @@ function TuyaCloud(options) {
   if (options.apiEtVersion) {
     debug('using new API');
     if (!options.secret2 || !options.certSign ||
-        options.secret2.length !== 32 || options.certSign.length !== 95) {
+        // OEM apps (such as Ledvance and Sylvania) use the single letter "A" instead of a certificate signature.
+        options.secret2.length !== 32 || (options.certSign.length !== 95 && (options.certSign.length != 1 || options.certSign != 'A'))) {
       throw new Error('New API: invalid format for secret2 or certSign');
     } else {
       this.keyHmac = options.certSign + '_' + options.secret2 + '_' + options.secret;
