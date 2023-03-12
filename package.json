@@ -1,6 +1,6 @@
 {
   "name": "@tuyapi/cloud",
-  "version": "0.6.1",
+  "version": "0.6.2",
   "description": "A NodeJS wrapper for Tuya's cloud API",
   "main": "index.js",
   "dependencies": {
